@@ -66,14 +66,14 @@ async function main()
     logger.error("network argument not set. use -network=testnet or -network=mainnet");
     process.exit();
   }
+  if (!rpchost)
+  {
+    logger.error("rpchost argument not set. use -rpchost=value");
+    process.exit();
+  }
   if (!rpcusername)
   {
     logger.error("rpcusername argument not set. use -rpcusername=value");
-    process.exit();
-  }
-  if (!rpcpassword)
-  {
-    logger.error("rpcpassword argument not set. use -rpcpassword=value");
     process.exit();
   }
   if (!rpcpassword)
