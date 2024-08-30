@@ -19,23 +19,22 @@ var mysql_password=undefined;
 var mysql_database=undefined;
 var client;
 require('dotenv').config();
-log4js.configure({
-  appenders: {
-    out: { type: 'stdout' },
-    app: { type: 'file', filename: network+'.log' }
-  },
-  categories: {
-  default: { appenders: [ 'out', 'app' ], level: 'debug' }
-  }
-});
 async function main()
 {
   argv.forEach((arg, index) => {
     let argument=arg.split("=");
-    if (argument[1]) logger.debug(argument[0]+"="+argument[1]);
     if (argument[0]=="-network")
     {
       network=argument[1];
+      log4js.configure({
+        appenders: {
+          out: { type: 'stdout' },
+          app: { type: 'file', filename: network+'.log' }
+        },
+        categories: {
+        default: { appenders: [ 'out', 'app' ], level: 'debug' }
+        }
+      }); 
       if (argument[1]=="testnet")
       {
         network="testnet";
@@ -60,6 +59,7 @@ async function main()
     if (argument[0]=="-rpchost") rpchost=argument[1];
     if (argument[0]=="-rpcusername") rpcusername=argument[1];
     if (argument[0]=="-rpcpassword") rpcpassword=argument[1];
+    if (argument[1]) logger.debug(argument[0]+"="+argument[1]);
   });
   if (!network)
   {
@@ -293,7 +293,7 @@ function getBlockCount()
     }).catch((r) =>
     {
      logger.error(r);
-    });
+   });
   }, 1000);
 }
 
