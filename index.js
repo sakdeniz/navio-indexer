@@ -316,11 +316,11 @@ function getPeerInfo()
       }
       else
       {
-        logger.error(r);
+        logger.error(r[0].message);
       }
     }).catch((r) =>
     {
-      logger.error(r);
+      logger.error(r.message);
     });
   }, 5000);
 }
