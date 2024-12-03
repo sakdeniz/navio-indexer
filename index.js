@@ -17,6 +17,7 @@ var mysql_host=undefined;
 var mysql_user=undefined;
 var mysql_password=undefined;
 var mysql_database=undefined;
+var faucet=false;
 var client;
 require('dotenv').config();
 async function main()
@@ -59,6 +60,7 @@ async function main()
     if (argument[0]=="-rpchost") rpchost=argument[1];
     if (argument[0]=="-rpcusername") rpcusername=argument[1];
     if (argument[0]=="-rpcpassword") rpcpassword=argument[1];
+    if (argument[0]=="-faucet") faucet=true;
     if (argument[1]) logger.debug(argument[0]+"="+argument[1]);
   });
   if (!network)
@@ -91,7 +93,7 @@ async function main()
       username: rpcusername,
       password: rpcpassword,
       wallet: '',
-      timeout:30000
+      timeout:600000
     });
   }
   catch(e) {
@@ -116,32 +118,40 @@ async function main()
       process.exit();
     });
   });
-  logger.info("Checking latest indexed block details from database...");
-  con.query("SELECT MAX(block_id) AS block_id FROM `"+mysql_database+"`.`blocks` WHERE network_id="+network_id + " LIMIT 1", async function (err, result, fields)
+  if (!faucet)
   {
-    if (err)
+    logger.info("Checking latest indexed block details from database...");
+    con.query("SELECT MAX(block_id) AS block_id FROM `"+mysql_database+"`.`blocks` WHERE network_id="+network_id + " LIMIT 1", async function (err, result, fields)
     {
-      logger.error(err);
-    }
-    else
-    {
-      if (result[0].block_id)
+
+      if (err)
       {
-        logger.info("Database query returned " + result.length + " records");
-        logger.info("Latest indexed block : " + result[0].block_id);
-        logger.info("Synchronization process is in progress.");
-        height=result[0].block_id+1;
+        logger.error(err);
       }
       else
       {
-        logger.info("No indexed block found, starting indexing from block " + height);
+        if (result[0].block_id)
+        {
+          logger.info("Database query returned " + result.length + " records");
+          logger.info("Latest indexed block : " + result[0].block_id);
+          logger.info("Synchronization process is in progress.");
+          height=result[0].block_id+1;
+        }
+        else
+        {
+          logger.info("No indexed block found, starting indexing from block " + height);
+        }
+        getBlockChainInfo();
+        getPeerInfo();
+        getBlock();
       }
-      getBlockChainInfo();
-      getPeerInfo();
-      getBlock();
-    }
-  });
-
+    });
+  }
+  else
+  {
+    logger.info("Faucet TX Index mode enabled.");
+    getFaucetTransactions();
+  }
   function getBlock()
   {
    let interval;
@@ -323,6 +333,39 @@ function getPeerInfo()
       logger.error(r.message);
     });
   }, 5000);
+}
+function getFaucetTransactions()
+{
+  let interval;
+  interval = setInterval(() => 
+  {
+    logger.info("Checking tx list for faucet... It can take some time...");
+    client.command([{ method: "listtransactions", parameters: ["*", 100000] }]).then((r) => 
+    {
+      if (!r[0].code)
+      {
+        let sql = `UPDATE `+mysql_database+`.faucet_txs SET data=?,last_updated=NOW() WHERE network_id=`+network_id+` LIMIT 1;`;
+        con.query(sql,[JSON.stringify(r[0].reverse())], async function (err, result)
+        {
+          if (err)
+          {
+            logger.info("Faucet txs not updated -> " + err);
+          }
+          else
+          {
+            logger.info("Faucet txs updated.");
+          }
+        });
+      }
+      else
+      {
+        logger.error(r[0].message);
+      }
+    }).catch((r) =>
+    {
+      logger.error(r.message);
+    });
+  }, 60000*10);
 }
 }
 main()
