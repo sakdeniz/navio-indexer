@@ -188,6 +188,7 @@ COMMIT;
 CREATE INDEX idx_network_id ON blocks(network_id);
 CREATE INDEX idx_block_id ON blocks(block_id);
 CREATE INDEX idx_hash ON blocks(hash);
+CREATE INDEX idx_network_id_block_id ON blocks(network_id, block_id);
 
 CREATE INDEX idx_network_id ON txs(network_id);
 CREATE INDEX idx_block_hash ON txs(block_hash);
