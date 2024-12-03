@@ -185,14 +185,15 @@ COMMIT;
 -- 
 -- Add indexes for some of the fields
 --
-CREATE INDEX idx_network_id ON blocks(network_id);
 CREATE INDEX idx_block_id ON blocks(block_id);
 CREATE INDEX idx_hash ON blocks(hash);
+CREATE INDEX idx_network_id ON blocks(network_id);
 CREATE INDEX idx_network_id_block_id ON blocks(network_id, block_id);
 
-CREATE INDEX idx_network_id ON txs(network_id);
 CREATE INDEX idx_block_hash ON txs(block_hash);
 CREATE INDEX idx_height ON txs(height);
+CREATE INDEX idx_network_id ON txs(network_id);
+CREATE INDEX idx_txid ON txs(txid);
 CREATE INDEX idx_txno ON txs(txno);
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
