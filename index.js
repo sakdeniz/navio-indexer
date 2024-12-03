@@ -45,6 +45,8 @@ async function main()
         mysql_user=process.env.MYSQL_USER_TESTNET;
         mysql_password=process.env.MYSQL_PASSWORD_TESTNET;
         mysql_database=process.env.MYSQL_DATABASE_TESTNET;
+        rpcusername=process.env.RPC_USER_TESTNET;
+        rpcpassword=process.env.RPC_PASS_TESTNET;
       }
       if (argument[1]=="mainnet")
       {
@@ -55,6 +57,8 @@ async function main()
         mysql_user=process.env.MYSQL_USER_MAINNET;
         mysql_password=process.env.MYSQL_PASSWORD_MAINNET;
         mysql_database=process.env.MYSQL_DATABASE_MAINNET;
+        rpcusername=process.env.RPC_USER_MAINNET;
+        rpcpassword=process.env.RPC_PASS_MAINNET;
       }
     }
     if (argument[0]=="-rpchost") rpchost=argument[1];
