@@ -1,187 +1,87 @@
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET AUTOCOMMIT = 0;
-START TRANSACTION;
-SET time_zone = "+00:00";
-
+/*!999999\- enable the sandbox mode */
+-- MariaDB dump 10.19  Distrib 10.11.8-MariaDB, for debian-linux-gnu (x86_64)
+--
+-- Host: localhost    Database: blk_testnet
+-- ------------------------------------------------------
+-- Server version	10.11.8-MariaDB-0ubuntu0.24.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Tablo için tablo yapısı `blocks`
+-- Table structure for table `blks`
 --
 
-CREATE TABLE `blocks` (
-  `id` int NOT NULL,
-  `block_id` int NOT NULL,
+DROP TABLE IF EXISTS `blks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `blks` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `block_id` int(11) NOT NULL,
   `hash` text NOT NULL,
-  `data` json DEFAULT NULL,
-  `created` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
-
--- --------------------------------------------------------
-
---
--- Tablo için tablo yapısı `peers`
---
-
-CREATE TABLE `peers` (
-  `id` int NOT NULL,
-  `data` json NOT NULL,
-  `last_updated` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
-
--- --------------------------------------------------------
+  `data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`data`)),
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_block_id` (`block_id`),
+  KEY `idx_hash` (`hash`(1024))
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Tablo için tablo yapısı `txs`
+-- Table structure for table `data`
 --
 
+DROP TABLE IF EXISTS `data`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `data` (
+  `key` tinytext NOT NULL,
+  `data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`data`)),
+  `updated` datetime DEFAULT NULL,
+  UNIQUE KEY `uidx_key` (`key`) USING HASH,
+  KEY `idx_updated` (`updated`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `txs`
+--
+
+DROP TABLE IF EXISTS `txs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `txs` (
-  `id` int NOT NULL,
-  `txno` int NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `txno` int(11) NOT NULL,
   `txid` text NOT NULL,
   `block_hash` text NOT NULL,
-  `height` int DEFAULT NULL,
-  `data` json NOT NULL,
-  `created` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+  `height` int(11) DEFAULT NULL,
+  `data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`data`)),
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_txno` (`txno`),
+  KEY `idx_txid` (`txid`(1024))
+  KEY `idx_block_hash` (`block_hash`(1024)),
+  KEY `idx_height` (`height`),
+  KEY `idx_created` (`created`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
---
--- Dökümü yapılmış tablolar için indeksler
---
-
---
--- Tablo için indeksler `blocks`
---
-ALTER TABLE `blocks`
-  ADD PRIMARY KEY (`id`);
-
---
--- Tablo için indeksler `peers`
---
-ALTER TABLE `peers`
-  ADD PRIMARY KEY (`id`);
-
---
--- Tablo için indeksler `txs`
---
-ALTER TABLE `txs`
-  ADD PRIMARY KEY (`id`);
-
---
--- Dökümü yapılmış tablolar için AUTO_INCREMENT değeri
---
-
---
--- Tablo için AUTO_INCREMENT değeri `blocks`
---
-ALTER TABLE `blocks`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- Tablo için AUTO_INCREMENT değeri `peers`
---
-ALTER TABLE `peers`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- Tablo için AUTO_INCREMENT değeri `txs`
---
-ALTER TABLE `txs`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
--- Tablo için tablo yapısı `data`
---
-
-CREATE TABLE `data` (
-  `id` int NOT NULL,
-  `k` tinytext CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
-  `data` json NOT NULL,
-  `last_updated` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
-
---
--- Tablo döküm verisi `data`
---
-
-INSERT INTO `data` (`id`, `k`, `data`, `last_updated`) VALUES
-(1, 'blockchaininfo', '', '2024-09-21 11:29:26');
-
-INSERT INTO `peers` (`id`, `data`, `last_updated`) VALUES
-(1, '', '2024-09-21 11:29:24');
---
--- Dökümü yapılmış tablolar için indeksler
---
-
---
--- Tablo için indeksler `data`
---
-ALTER TABLE `data`
-  ADD PRIMARY KEY (`id`);
-
---
--- Dökümü yapılmış tablolar için AUTO_INCREMENT değeri
---
-
---
--- Tablo için AUTO_INCREMENT değeri `data`
---
-ALTER TABLE `data`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- Tablo için tablo yapısı `faucet_txs`
---
-
-CREATE TABLE `faucet_txs` (
-  `id` int NOT NULL,
-  `data` json NOT NULL,
-  `last_updated` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
-
---
--- Tablo döküm verisi `faucet_txs`
---
-
-INSERT INTO `faucet_txs` (`id`, `data`, `last_updated`) VALUES
-(1, '', '2024-11-03 01:35:25');
-
---
--- Dökümü yapılmış tablolar için indeksler
---
-
---
--- Tablo için indeksler `faucet_txs`
---
-ALTER TABLE `faucet_txs`
-  ADD PRIMARY KEY (`id`);
-
---
--- Dökümü yapılmış tablolar için AUTO_INCREMENT değeri
---
-
---
--- Tablo için AUTO_INCREMENT değeri `faucet_txs`
---
-ALTER TABLE `faucet_txs`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
--- 
--- Add indexes for some of the fields
---
-CREATE INDEX idx_block_id ON blocks(block_id);
-CREATE INDEX idx_hash ON blocks(hash);
-
-CREATE INDEX idx_block_hash ON txs(block_hash);
-CREATE INDEX idx_height ON txs(height);
-CREATE INDEX idx_txid ON txs(txid);
-CREATE INDEX idx_txno ON txs(txno);
-
-COMMIT;
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2024-12-04 14:03:56
