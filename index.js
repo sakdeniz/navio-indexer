@@ -32,7 +32,7 @@ async function main()
       log4js.configure({
         appenders: {
           out: { type: 'stdout' },
-          app: { type: 'file', filename: network+'.log' }
+          //app: { type: 'file', filename: `/tmp/${network}.log` }
         },
         categories: {
         default: { appenders: [ 'out', 'app' ], level: 'debug' }
@@ -42,23 +42,25 @@ async function main()
       {
         network="testnet";
         rpc_port=48485;
+        rpc_host=process.env.RPC_HOST_TESTNET;
+        rpc_user=process.env.RPC_USER_TESTNET;
+        rpc_pass=process.env.RPC_PASS_TESTNET;
         db_host=process.env.DB_HOST_TESTNET;
         db_user=process.env.DB_USER_TESTNET;
         db_pass=process.env.DB_PASS_TESTNET;
         db_name=process.env.DB_NAME_TESTNET;
-        rpc_user=process.env.RPC_USER_TESTNET;
-        rpc_pass=process.env.RPC_PASS_TESTNET;
       }
       if (argument[1]=="mainnet")
       {
         network="mainnet";
         rpc_port=48485;
+        rpc_host=process.env.RPC_HOST_MAINNET;
+        rpc_user=process.env.RPC_USER_MAINNET;
+        rpc_pass=process.env.RPC_PASS_MAINNET;
         db_host=process.env.DB_HOST_MAINNET;
         db_user=process.env.DB_USER_MAINNET;
         db_pass=process.env.DB_PASS_MAINNET;
         db_name=process.env.DB_NAME_MAINNET;
-        rpc_user=process.env.RPC_USER_MAINNET;
-        rpc_pass=process.env.RPC_PASS_MAINNET;
       }
     }
     if (argument[0]=="-rpchost") rpc_host=argument[1];
