@@ -15,7 +15,6 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `blocks` (
   `id` int NOT NULL,
-  `network_id` int NOT NULL,
   `block_id` int NOT NULL,
   `hash` text NOT NULL,
   `data` json DEFAULT NULL,
@@ -30,7 +29,6 @@ CREATE TABLE `blocks` (
 
 CREATE TABLE `peers` (
   `id` int NOT NULL,
-  `network_id` int NOT NULL,
   `data` json NOT NULL,
   `last_updated` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
@@ -43,7 +41,6 @@ CREATE TABLE `peers` (
 
 CREATE TABLE `txs` (
   `id` int NOT NULL,
-  `network_id` int NOT NULL,
   `txno` int NOT NULL,
   `txid` text NOT NULL,
   `block_hash` text NOT NULL,
@@ -103,7 +100,6 @@ COMMIT;
 
 CREATE TABLE `data` (
   `id` int NOT NULL,
-  `network_id` int DEFAULT NULL,
   `k` tinytext CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
   `data` json NOT NULL,
   `last_updated` datetime DEFAULT NULL
@@ -157,9 +153,9 @@ CREATE TABLE `faucet_txs` (
 --
 
 INSERT INTO `faucet_txs` (`id`, `network_id`, `data`, `last_updated`) VALUES
-(1, 1, '{}', '2024-11-03 01:35:25');
+(1, 1, '', '2024-11-03 01:35:25');
 INSERT INTO `faucet_txs` (`id`, `network_id`, `data`, `last_updated`) VALUES
-(2, 2, '{}', '2024-09-21 10:55:40');
+(2, 2, '', '2024-09-21 10:55:40');
 
 --
 -- Dökümü yapılmış tablolar için indeksler
@@ -187,12 +183,9 @@ COMMIT;
 --
 CREATE INDEX idx_block_id ON blocks(block_id);
 CREATE INDEX idx_hash ON blocks(hash);
-CREATE INDEX idx_network_id ON blocks(network_id);
-CREATE INDEX idx_network_id_block_id ON blocks(network_id, block_id);
 
 CREATE INDEX idx_block_hash ON txs(block_hash);
 CREATE INDEX idx_height ON txs(height);
-CREATE INDEX idx_network_id ON txs(network_id);
 CREATE INDEX idx_txid ON txs(txid);
 CREATE INDEX idx_txno ON txs(txno);
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
