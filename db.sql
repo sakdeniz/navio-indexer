@@ -68,7 +68,7 @@ CREATE TABLE `txs` (
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_txno` (`txno`),
-  KEY `idx_txid` (`txid`(1024))
+  KEY `idx_txid` (`txid`(1024)),
   KEY `idx_block_hash` (`block_hash`(1024)),
   KEY `idx_height` (`height`),
   KEY `idx_created` (`created`)
