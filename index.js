@@ -235,7 +235,7 @@ async function main() {
   }
 
   function getBlockChainInfo() {
-    let sql = `insert ignore ${db_name}.data set key = 'blockchaininfo', data = '', updated = now()`;
+    let sql = `insert ignore into ${db_name}.data set key = 'blockchaininfo', data = '', updated = now()`;
     con.query(sql, [], async function (err) {
       if (err) logger.error(err);
       let interval;
@@ -266,7 +266,7 @@ async function main() {
   }
 
   function getPeerInfo() {
-    let sql = `insert ignore ${db_name}.data set key = 'peerinfo', data = '', updated = now()`;
+    let sql = `insert ignore into ${db_name}.data set key = 'peerinfo', data = '', updated = now()`;
     con.query(sql, [], async function (err) {
       if (err) logger.error(err);
 
@@ -277,7 +277,7 @@ async function main() {
           .then((r) => {
             if (!r[0].code) {
               let sql = `update ${db_name}.data set data = ?, updated = now() where key = 'peerinfo' limit 1`;
-              con.query(sql, [JSON.stringify(r)], async function (err, result) {
+              con.query(sql, [JSON.stringify(r)], async function (err) {
                 if (err) {
                   logger.info('Peer info not updated -> ' + err);
                 }
@@ -293,7 +293,7 @@ async function main() {
     });
   }
   function getFaucetTransactions() {
-    let sql = `insert ignore ${db_name}.data set key = 'faucet_txs', data = '', updated = now()`;
+    let sql = `insert ignore into ${db_name}.data set key = 'faucet_txs', data = '', updated = now()`;
     con.query(sql, [], async function (err) {
       if (err) logger.error(err);
 
@@ -308,7 +308,7 @@ async function main() {
               con.query(
                 sql,
                 [JSON.stringify(r[0].reverse())],
-                async function (err, result) {
+                async function (err) {
                   if (err) {
                     logger.info('Faucet txs not updated -> ' + err);
                   } else {
