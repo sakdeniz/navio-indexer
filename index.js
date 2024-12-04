@@ -235,7 +235,7 @@ async function main() {
   }
 
   function getBlockChainInfo() {
-    let sql = `insert ignore into ${db_name}.data set key = 'blockchaininfo', data = '', updated = now()`;
+    let sql = `insert ignore into ${db_name}.data (key, data, updated) values ('blockchaininfo','', now())`;
     con.query(sql, [], async function (err) {
       if (err) logger.error(err);
       let interval;
@@ -266,7 +266,7 @@ async function main() {
   }
 
   function getPeerInfo() {
-    let sql = `insert ignore into ${db_name}.data set key = 'peerinfo', data = '', updated = now()`;
+    let sql = `insert ignore into ${db_name}.data (key, data, updated) values ('peerinfo','', now())`;
     con.query(sql, [], async function (err) {
       if (err) logger.error(err);
 
@@ -293,7 +293,7 @@ async function main() {
     });
   }
   function getFaucetTransactions() {
-    let sql = `insert ignore into ${db_name}.data set key = 'faucet_txs', data = '', updated = now()`;
+    let sql = `insert ignore into ${db_name}.data (key, data, updated) values ('faucet_txs','', now())`;
     con.query(sql, [], async function (err) {
       if (err) logger.error(err);
 
