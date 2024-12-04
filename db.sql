@@ -46,7 +46,7 @@ CREATE TABLE `data` (
   `k` tinytext NOT NULL,
   `data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`data`)),
   `updated` datetime DEFAULT NULL,
-  UNIQUE KEY `uidx_key` (`key`) USING HASH,
+  UNIQUE KEY `uidx_k` (`k`) USING HASH,
   KEY `idx_updated` (`updated`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
