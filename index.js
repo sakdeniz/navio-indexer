@@ -132,18 +132,18 @@ async function main() {
   if (!faucet) {
     logger.info('Checking latest indexed block details from database...');
     con.query(
-      `select max(block_id) as block_id from ${db_name}.blks limit 1`,
+      `select max(height) as height from ${db_name}.blks limit 1`,
       async function (err, result, fields) {
         if (err) {
           logger.error(err);
         } else {
-          if (result[0].block_id) {
+          if (result[0].height) {
             logger.info(
               'Database query returned ' + result.length + ' records',
             );
-            logger.info('Latest indexed block : ' + result[0].block_id);
+            logger.info('Latest indexed block : ' + result[0].height);
             logger.info('Synchronization process is in progress.');
-            height = result[0].block_id + 1;
+            height = result[0].height + 1;
           } else {
             logger.info(
               'No indexed block found, starting indexing from block ' + height,
@@ -176,7 +176,7 @@ async function main() {
           client
             .getBlock(block_hash)
             .then((block) => {
-              let sql = `insert into ${db_name}.blks (block_id, hash, data, created) values (${height}, '${block_hash}', ?, now())`;
+              let sql = `insert into ${db_name}.blks (height, hash, time, data, created) values (${height}, '${block_hash}', ?, now())`;
               con.query(sql, [JSON.stringify(block)], async function (err) {
                 if (err) {
                   logger.info('Block record not added -> ' + err);
@@ -235,7 +235,7 @@ async function main() {
   }
 
   function getBlockChainInfo() {
-    let sql = `insert ignore into ${db_name}.data (\`key\`, data, updated) values ('blockchaininfo', '{}', now())`;
+    let sql = `insert ignore into ${db_name}.data (k, data, updated) values ('blockchaininfo', '{}', now())`;
     con.query(sql, [], async function (err) {
       if (err) logger.error(err);
       let interval;
@@ -248,7 +248,7 @@ async function main() {
               logger.info(
                 `Syncing : [${r[0].chain}] Indexed Blocks (Database) : ${height - 1} Synced Blocks (Node) : ${r[0].blocks} Headers (Node) : ${r[0].headers}`,
               );
-              let sql = `update ${db_name}.data SET data = ?, updated = now() where key = 'blockchaininfo'`;
+              let sql = `update ${db_name}.data SET data = ?, updated = now() where k = 'blockchaininfo'`;
               con.query(sql, [JSON.stringify(r)], async function (err) {
                 if (err) {
                   logger.info('Block chain info not updated -> ' + err);
@@ -266,7 +266,7 @@ async function main() {
   }
 
   function getPeerInfo() {
-    let sql = `insert ignore into ${db_name}.data (\`key\`, data, updated) values ('peerinfo', '{}', now())`;
+    let sql = `insert ignore into ${db_name}.data (k, data, updated) values ('peerinfo', '{}', now())`;
     con.query(sql, [], async function (err) {
       if (err) logger.error(err);
 
@@ -276,7 +276,7 @@ async function main() {
           .command([{ method: 'getpeerinfo' }])
           .then((r) => {
             if (!r[0].code) {
-              let sql = `update ${db_name}.data set data = ?, updated = now() where key = 'peerinfo' limit 1`;
+              let sql = `update ${db_name}.data set data = ?, updated = now() where k = 'peerinfo' limit 1`;
               con.query(sql, [JSON.stringify(r)], async function (err) {
                 if (err) {
                   logger.info('Peer info not updated -> ' + err);
@@ -293,7 +293,7 @@ async function main() {
     });
   }
   function getFaucetTransactions() {
-    let sql = `insert ignore into ${db_name}.data (\`key\`, data, updated) values ('faucet_txs', '{}', now())`;
+    let sql = `insert ignore into ${db_name}.data (k, data, updated) values ('faucet_txs', '{}', now())`;
     con.query(sql, [], async function (err) {
       if (err) logger.error(err);
 
@@ -304,7 +304,7 @@ async function main() {
           .command([{ method: 'listtransactions', parameters: ['*', 100000] }])
           .then((r) => {
             if (!r[0].code) {
-              let sql = `update ${db_name}.data set data = ?, updated = now() where key = 'faucet_txs'`;
+              let sql = `update ${db_name}.data set data = ?, updated = now() where k = 'faucet_txs'`;
               con.query(
                 sql,
                 [JSON.stringify(r[0].reverse())],

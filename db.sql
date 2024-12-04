@@ -25,12 +25,12 @@ DROP TABLE IF EXISTS `blks`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `blks` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `block_id` int(11) NOT NULL,
+  `height` int(11) NOT NULL,
   `hash` text NOT NULL,
   `data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`data`)),
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `idx_block_id` (`block_id`),
+  KEY `idx_height` (`height`),
   KEY `idx_hash` (`hash`(1024))
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -43,7 +43,7 @@ DROP TABLE IF EXISTS `data`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `data` (
-  `key` tinytext NOT NULL,
+  `k` tinytext NOT NULL,
   `data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`data`)),
   `updated` datetime DEFAULT NULL,
   UNIQUE KEY `uidx_key` (`key`) USING HASH,
