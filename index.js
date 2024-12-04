@@ -30,7 +30,7 @@ async function main() {
       log4js.configure({
         appenders: {
           out: { type: 'stdout' },
-          app: { type: 'file', filename: `/tmp/${network}.log` }
+          app: { type: 'file', filename: `/tmp/${network}.log` },
         },
         categories: {
           default: { appenders: ['out'], level: 'debug' },
@@ -177,54 +177,50 @@ async function main() {
             .getBlock(block_hash)
             .then((block) => {
               let sql = `insert into ${db_name}.blks (block_id, hash, data, created) values (${height}, '${block_hash}', ?, now())`;
-              con.query(
-                sql,
-                [JSON.stringify(block)],
-                async function (err, result) {
-                  if (err) {
-                    logger.info('Block record not added -> ' + err);
+              con.query(sql, [JSON.stringify(block)], async function (err) {
+                if (err) {
+                  logger.info('Block record not added -> ' + err);
+                } else {
+                  height = height + 1;
+                  if (height > 0) {
+                    block.tx.forEach((txid) => {
+                      client
+                        .getRawTransaction(txid)
+                        .then((rawTransaction) => {
+                          client
+                            .decodeRawTransaction(rawTransaction)
+                            .then((decodedRawTransaction) => {
+                              txno++;
+                              let sql = `insert into ${db_name}.txs (txno, txid, block_hash, height, data, created) values (${txno}, '${txid}', '${block_hash}', ${height}, ?, NOW())`;
+                              con.query(
+                                sql,
+                                [JSON.stringify(decodedRawTransaction)],
+                                async function (err) {
+                                  if (err) {
+                                    logger.info(
+                                      'TX record not added -> ' + err,
+                                    );
+                                  } else {
+                                    is_block_processing = false;
+                                  }
+                                },
+                              );
+                            })
+                            .catch((r) => {
+                              logger.error(r);
+                              is_block_processing = false;
+                            });
+                        })
+                        .catch((r) => {
+                          logger.error(r);
+                          is_block_processing = false;
+                        });
+                    });
                   } else {
-                    height = height + 1;
-                    if (height > 0) {
-                      block.tx.forEach((txid) => {
-                        client
-                          .getRawTransaction(txid)
-                          .then((rawTransaction) => {
-                            client
-                              .decodeRawTransaction(rawTransaction)
-                              .then((decodedRawTransaction) => {
-                                txno++;
-                                let sql = `insert into ${db_name}.txs (txno, txid, block_hash, height, data, created) values (${txno}, '${txid}', '${block_hash}', ${height}, ?, NOW())`;
-                                con.query(
-                                  sql,
-                                  [JSON.stringify(decodedRawTransaction)],
-                                  async function (err, result) {
-                                    if (err) {
-                                      logger.info(
-                                        'TX record not added -> ' + err,
-                                      );
-                                    } else {
-                                      is_block_processing = false;
-                                    }
-                                  },
-                                );
-                              })
-                              .catch((r) => {
-                                logger.error(r);
-                                is_block_processing = false;
-                              });
-                          })
-                          .catch((r) => {
-                            logger.error(r);
-                            is_block_processing = false;
-                          });
-                      });
-                    } else {
-                      is_block_processing = false;
-                    }
+                    is_block_processing = false;
                   }
-                },
-              );
+                }
+              });
             })
             .catch((r) => {
               logger.error(r);
@@ -240,7 +236,7 @@ async function main() {
 
   function getBlockChainInfo() {
     let sql = `insert ignore ${db_name}.data set key = 'blockchaininfo', data = '', updated = now()`;
-    con.query(sql, [JSON.stringify(r)], async function (err, result) {
+    con.query(sql, [], async function (err) {
       if (err) logger.error(err);
       let interval;
       interval = setInterval(() => {
@@ -271,7 +267,7 @@ async function main() {
 
   function getPeerInfo() {
     let sql = `insert ignore ${db_name}.data set key = 'peerinfo', data = '', updated = now()`;
-    con.query(sql, [JSON.stringify(r)], async function (err, result) {
+    con.query(sql, [], async function (err) {
       if (err) logger.error(err);
 
       let interval;
@@ -298,7 +294,7 @@ async function main() {
   }
   function getFaucetTransactions() {
     let sql = `insert ignore ${db_name}.data set key = 'faucet_txs', data = '', updated = now()`;
-    con.query(sql, [JSON.stringify(r)], async function (err, result) {
+    con.query(sql, [], async function (err) {
       if (err) logger.error(err);
 
       let interval;
