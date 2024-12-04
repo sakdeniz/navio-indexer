@@ -176,7 +176,7 @@ async function main() {
           client
             .getBlock(block_hash)
             .then((block) => {
-              let sql = `insert into ${db_name}.blks (height, hash, time, data, created) values (${height}, '${block_hash}', ?, now())`;
+              let sql = `insert into ${db_name}.blks (height, hash, data, created) values (${height}, '${block_hash}', ?, now())`;
               con.query(sql, [JSON.stringify(block)], async function (err) {
                 if (err) {
                   logger.info('Block record not added -> ' + err);
