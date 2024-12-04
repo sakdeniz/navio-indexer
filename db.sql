@@ -92,7 +92,6 @@ ALTER TABLE `peers`
 --
 ALTER TABLE `txs`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
-COMMIT;
 
 --
 -- Tablo için tablo yapısı `data`
@@ -109,13 +108,11 @@ CREATE TABLE `data` (
 -- Tablo döküm verisi `data`
 --
 
-INSERT INTO `data` (`id`, `network_id`, `k`, `data`, `last_updated`) VALUES
-(1, 1, 'blockchaininfo', '', '2024-11-30 19:30:31'),
-(2, 2, 'blockchaininfo', '', '2024-09-21 11:29:26');
+INSERT INTO `data` (`id`, `k`, `data`, `last_updated`) VALUES
+(1, 'blockchaininfo', '', '2024-09-21 11:29:26');
 
-INSERT INTO `peers` (`id`, `network_id`, `data`, `last_updated`) VALUES
-(1, 1, '', '2024-11-30 19:30:31'),
-(2, 2, '', '2024-09-21 11:29:24');
+INSERT INTO `peers` (`id`, `data`, `last_updated`) VALUES
+(1, '', '2024-09-21 11:29:24');
 --
 -- Dökümü yapılmış tablolar için indeksler
 --
@@ -135,7 +132,6 @@ ALTER TABLE `data`
 --
 ALTER TABLE `data`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-COMMIT;
 
 --
 -- Tablo için tablo yapısı `faucet_txs`
@@ -143,7 +139,6 @@ COMMIT;
 
 CREATE TABLE `faucet_txs` (
   `id` int NOT NULL,
-  `network_id` int NOT NULL,
   `data` json NOT NULL,
   `last_updated` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
@@ -152,10 +147,8 @@ CREATE TABLE `faucet_txs` (
 -- Tablo döküm verisi `faucet_txs`
 --
 
-INSERT INTO `faucet_txs` (`id`, `network_id`, `data`, `last_updated`) VALUES
-(1, 1, '', '2024-11-03 01:35:25');
-INSERT INTO `faucet_txs` (`id`, `network_id`, `data`, `last_updated`) VALUES
-(2, 2, '', '2024-09-21 10:55:40');
+INSERT INTO `faucet_txs` (`id`, `data`, `last_updated`) VALUES
+(1, '', '2024-11-03 01:35:25');
 
 --
 -- Dökümü yapılmış tablolar için indeksler
@@ -176,7 +169,6 @@ ALTER TABLE `faucet_txs`
 --
 ALTER TABLE `faucet_txs`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-COMMIT;
 
 -- 
 -- Add indexes for some of the fields
@@ -188,6 +180,8 @@ CREATE INDEX idx_block_hash ON txs(block_hash);
 CREATE INDEX idx_height ON txs(height);
 CREATE INDEX idx_txid ON txs(txid);
 CREATE INDEX idx_txno ON txs(txno);
+
+COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

@@ -4,19 +4,21 @@ var mysql = require('mysql');
 var log4js = require('log4js');
 var logger = log4js.getLogger('Indexer');
 var network=undefined;
-var network_id=undefined;
 var height=0;
 var block_indexing_cycle=100; // in miliseconds
 var block=undefined;
 var is_block_processing=false;
-var rpcusername=undefined;
-var rpcpassword=undefined;
-var rpchost=undefined;
-var rpcport=undefined;
-var mysql_host=undefined;
-var mysql_user=undefined;
-var mysql_password=undefined;
-var mysql_database=undefined;
+
+var rpc_user=undefined;
+var rpc_pass=undefined;
+var rpc_host=undefined;
+var rpc_port=undefined;
+
+var db_host=undefined;
+var db_user=undefined;
+var db_pass=undefined;
+var db_name=undefined;
+
 var faucet=false;
 var client;
 require('dotenv').config();
@@ -39,31 +41,29 @@ async function main()
       if (argument[1]=="testnet")
       {
         network="testnet";
-        network_id=1;
-        rpcport=48485;
-        mysql_host=process.env.MYSQL_HOST_TESTNET;
-        mysql_user=process.env.MYSQL_USER_TESTNET;
-        mysql_password=process.env.MYSQL_PASSWORD_TESTNET;
-        mysql_database=process.env.MYSQL_DATABASE_TESTNET;
-        rpcusername=process.env.RPC_USER_TESTNET;
-        rpcpassword=process.env.RPC_PASS_TESTNET;
+        rpc_port=48485;
+        db_host=process.env.DB_HOST_TESTNET;
+        db_user=process.env.DB_USER_TESTNET;
+        db_pass=process.env.DB_PASS_TESTNET;
+        db_name=process.env.DB_NAME_TESTNET;
+        rpc_user=process.env.RPC_USER_TESTNET;
+        rpc_pass=process.env.RPC_PASS_TESTNET;
       }
       if (argument[1]=="mainnet")
       {
         network="mainnet";
-        network_id=2;
-        rpcport=48485;
-        mysql_host=process.env.MYSQL_HOST_MAINNET;
-        mysql_user=process.env.MYSQL_USER_MAINNET;
-        mysql_password=process.env.MYSQL_PASSWORD_MAINNET;
-        mysql_database=process.env.MYSQL_DATABASE_MAINNET;
-        rpcusername=process.env.RPC_USER_MAINNET;
-        rpcpassword=process.env.RPC_PASS_MAINNET;
+        rpc_port=48485;
+        db_host=process.env.DB_HOST_MAINNET;
+        db_user=process.env.DB_USER_MAINNET;
+        db_pass=process.env.DB_PASS_MAINNET;
+        db_name=process.env.DB_NAME_MAINNET;
+        rpc_user=process.env.RPC_USER_MAINNET;
+        rpc_pass=process.env.RPC_PASS_MAINNET;
       }
     }
-    if (argument[0]=="-rpchost") rpchost=argument[1];
-    if (argument[0]=="-rpcusername") rpcusername=argument[1];
-    if (argument[0]=="-rpcpassword") rpcpassword=argument[1];
+    if (argument[0]=="-rpchost") rpc_host=argument[1];
+    if (argument[0]=="-rpcusername") rpc_user=argument[1];
+    if (argument[0]=="-rpcpassword") rpc_pass=argument[1];
     if (argument[0]=="-faucet") faucet=true;
     if (argument[1]) logger.debug(argument[0]+"="+argument[1]);
   });
@@ -72,30 +72,30 @@ async function main()
     logger.error("network argument not set. use -network=testnet or -network=mainnet");
     process.exit();
   }
-  if (!rpchost)
+  if (!rpc_host)
   {
     logger.error("rpchost argument not set. use -rpchost=value");
     process.exit();
   }
-  if (!rpcusername)
+  if (!rpc_user)
   {
     logger.error("rpcusername argument not set. use -rpcusername=value");
     process.exit();
   }
-  if (!rpcpassword)
+  if (!rpc_pass)
   {
     logger.error("rpcpassword argument not set. use -rpcpassword=value");
     process.exit();
   }
-  logger.info("Indexer started for network '" + network + "' Network ID : " + network_id);
+  logger.info("Indexer started for network '" + network + "'");
   logger.info("Using environment variables for MySQL server connection from .env file.");
-  logger.info("Connecting naviod node via RPC client. Host:'" + rpchost + "'. Port:"+rpcport + " Username:'"+rpcusername + "' Password:'"+rpcpassword + "'");
+  logger.info("Connecting naviod node via RPC client. Host:'" + rpc_host + "'. Port:"+rpc_port + " Username:'"+rpc_user + "' Password:'"+rpc_pass + "'");
   try {
     client = new Client({
-      host:rpchost,
-      port: rpcport,
-      username: rpcusername,
-      password: rpcpassword,
+      host:rpc_host,
+      port: rpc_port,
+      username: rpc_user,
+      password: rpc_pass,
       wallet: '',
       timeout:600000
     });
@@ -104,11 +104,11 @@ async function main()
     console.log(e);
     process.exit();
   }
-  logger.info("Connecting to MySQL Server. Host:'"+mysql_host+"' Username:'"+mysql_user+"' Password:'"+mysql_password+"'"+" Database:'"+mysql_database+"'");
+  logger.info("Connecting to MySQL Server. Host:'"+db_host+"' Username:'"+db_user+"' Password:'"+db_pass+"'"+" Database:'"+db_name+"'");
   var con = mysql.createPool({
-    host: mysql_host,
-    user: mysql_user,
-    password: mysql_password,
+    host: db_host,
+    user: db_user,
+    password: db_pass,
     connectionLimit:1024
   });
 
@@ -125,7 +125,7 @@ async function main()
   if (!faucet)
   {
     logger.info("Checking latest indexed block details from database...");
-    con.query("SELECT MAX(block_id) AS block_id FROM `"+mysql_database+"`.`blocks` WHERE network_id="+network_id + " LIMIT 1", async function (err, result, fields)
+    con.query("SELECT MAX(block_id) AS block_id FROM `"+db_name+"`.`blocks` LIMIT 1", async function (err, result, fields)
     {
 
       if (err)
@@ -170,9 +170,8 @@ async function main()
     {
       client.getBlock(block_hash).then((block) => 
       {
-        let sql = `INSERT INTO `+mysql_database+`.blocks(
+        let sql = `INSERT INTO `+db_name+`.blocks(
         id,
-        network_id,
         block_id,
         hash,
         data,
@@ -180,7 +179,6 @@ async function main()
         )
         VALUES(
         NULL,
-        `+network_id+`,
         `+height+`,
         '`+block_hash+`',
         ?,
@@ -204,9 +202,8 @@ async function main()
                   client.decodeRawTransaction(rawTransaction).then((decodedRawTransaction) => 
                   {
                     txno++;
-                    let sql = `INSERT INTO `+mysql_database+`.txs(
+                    let sql = `INSERT INTO `+db_name+`.txs(
                     id,
-                    network_id,
                     txno,
                     txid,
                     block_hash,
@@ -216,7 +213,6 @@ async function main()
                     )
                     VALUES(
                     NULL,
-                    `+network_id+`,
                     `+txno+`,
                     '`+txid+`',
                     '`+block_hash+`',
@@ -277,7 +273,7 @@ async function main()
       {
         block=r[0].blocks;
         logger.info("Syncing : [" + r[0].chain + "] Indexed Blocks (Database) : " + (height-1) + " Synced Blocks (Node) : " + r[0].blocks + " Headers (Node) : " + r[0].headers);
-        let sql = `UPDATE `+mysql_database+`.data SET data=?,last_updated=NOW() WHERE network_id=`+network_id+` AND k='blockchaininfo' LIMIT 1;`;
+        let sql = `update ${db_name}.data SET data=?, last_updated=now() where id = 1 and k = 'blockchaininfo' limit 1`;
         con.query(sql,[JSON.stringify(r)], async function (err, result)
         {
           if (err)
@@ -319,7 +315,7 @@ function getPeerInfo()
     {
       if (!r[0].code)
       {
-        let sql = `UPDATE `+mysql_database+`.peers SET data=?,last_updated=NOW() WHERE network_id=`+network_id+` LIMIT 1;`;
+        let sql = `update ${db_name}.peers set data = ?, last_updated = now() where id = 1 limit 1`;
         con.query(sql,[JSON.stringify(r)], async function (err, result)
         {
           if (err)
@@ -348,7 +344,7 @@ function getFaucetTransactions()
     {
       if (!r[0].code)
       {
-        let sql = `UPDATE `+mysql_database+`.faucet_txs SET data=?,last_updated=NOW() WHERE network_id=`+network_id+` LIMIT 1;`;
+        let sql = `update ${db_name}.faucet_txs set data = ?, last_updated = now() where id = 1 limit 1;`;
         con.query(sql,[JSON.stringify(r[0].reverse())], async function (err, result)
         {
           if (err)
