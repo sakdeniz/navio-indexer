@@ -39,7 +39,7 @@ async function main() {
 
       if (argument[1] == 'testnet') {
         network = 'testnet';
-        rpc_port = 48485;
+        rpc_port = process.env.RPC_PORT_TESTNET;
         rpc_host = process.env.RPC_HOST_TESTNET;
         rpc_user = process.env.RPC_USER_TESTNET;
         rpc_pass = process.env.RPC_PASS_TESTNET;
@@ -51,7 +51,7 @@ async function main() {
 
       if (argument[1] == 'mainnet') {
         network = 'mainnet';
-        rpc_port = 48485;
+        rpc_port = process.env.RPC_PORT_MAINNET;
         rpc_host = process.env.RPC_HOST_MAINNET;
         rpc_user = process.env.RPC_USER_MAINNET;
         rpc_pass = process.env.RPC_PASS_MAINNET;
