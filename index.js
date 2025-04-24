@@ -1,8 +1,8 @@
-const {argv} = require('process');
-const Client = require('bitcoin-core');
-var mysql = require('mysql');
-var log4js = require('log4js');
-var logger = log4js.getLogger('Indexer');
+const {argv}=require('process');
+const Client=require('bitcoin-core');
+var mysql=require('mysql');
+var log4js=require('log4js');
+var logger=log4js.getLogger('Indexer');
 var network=undefined;
 var network_id=undefined;
 var height=0;
@@ -33,14 +33,14 @@ async function main()
           app: { type: 'file', filename: network+'.log' }
         },
         categories: {
-        default: { appenders: [ 'out', 'app' ], level: 'debug' }
+          default: { appenders: [ 'out', 'app' ], level: 'debug' }
         }
       }); 
       if (argument[1]=="testnet")
       {
         network="testnet";
         network_id=1;
-        rpcport=48485;
+        rpcport=33577;
         mysql_host=process.env.MYSQL_HOST_TESTNET;
         mysql_user=process.env.MYSQL_USER_TESTNET;
         mysql_password=process.env.MYSQL_PASSWORD_TESTNET;
@@ -50,7 +50,7 @@ async function main()
       {
         network="mainnet";
         network_id=2;
-        rpcport=48485;
+        rpcport=33577;
         mysql_host=process.env.MYSQL_HOST_MAINNET;
         mysql_user=process.env.MYSQL_USER_MAINNET;
         mysql_password=process.env.MYSQL_PASSWORD_MAINNET;
@@ -93,7 +93,7 @@ async function main()
       username: rpcusername,
       password: rpcpassword,
       wallet: '',
-      timeout:600000
+      timeout:60*1000 // 60 seconds
     });
   }
   catch(e) {
@@ -107,7 +107,6 @@ async function main()
     password: mysql_password,
     connectionLimit:1024
   });
-
   con.getConnection(function(err, connection) {
     if (err) {
       console.log("MySQL server connection failed. Error No:" + err.errorno + " Code:" + err.code);
@@ -123,7 +122,6 @@ async function main()
     logger.info("Checking latest indexed block details from database...");
     con.query("SELECT MAX(block_id) AS block_id FROM `"+mysql_database+"`.`blocks` WHERE network_id="+network_id + " LIMIT 1", async function (err, result, fields)
     {
-
       if (err)
       {
         logger.error(err);
@@ -193,14 +191,20 @@ async function main()
             height=height+1;
             if (height>0)
             {
-              block.tx.forEach(txid =>
+             logger.info("TX length for block "+height+" is "+block.tx.length);
+             if (height==1)
+             {
+              console.log("Skipping genesis block and moving block 1");
+              is_block_processing=false;
+            }
+            block.tx.forEach(txid =>
+            {
+              client.getRawTransaction(txid).then((rawTransaction) => 
               {
-                client.getRawTransaction(txid).then((rawTransaction) => 
+                client.decodeRawTransaction(rawTransaction).then((decodedRawTransaction) => 
                 {
-                  client.decodeRawTransaction(rawTransaction).then((decodedRawTransaction) => 
-                  {
-                    txno++;
-                    let sql = `INSERT INTO `+mysql_database+`.txs(
+                  txno++;
+                  let sql = `INSERT INTO `+mysql_database+`.txs(
                     id,
                     network_id,
                     txno,
@@ -212,59 +216,55 @@ async function main()
                     )
                     VALUES(
                     NULL,
-                    `+network_id+`,
-                    `+txno+`,
-                    '`+txid+`',
-                    '`+block_hash+`',
-                    `+height+`,
+                  `+network_id+`,
+                  `+txno+`,
+                  '`+txid+`',
+                  '`+block_hash+`',
+                  `+height+`,
                     ?,
                     NOW()
-                    );`;
-                    con.query(sql,[JSON.stringify(decodedRawTransaction)], async function (err, result)
-                    {
-                      if (err)
-                      {
-                        logger.info("TX record not added -> " + err);
-                      }
-                      else
-                      {
-                        is_block_processing=false;
-                      }
-                    });
-                  }).catch((r) =>
+                  );`;
+                  con.query(sql,[JSON.stringify(decodedRawTransaction)], async function (err, result)
                   {
-                    logger.error(r);
+                   logger.warn((txno+1)+"/"+block.tx.length + " tx processed for block : " + height);
+                   if (err)
+                   {
+                    logger.info("TX record not added -> " + err);
+                  }
+                  else
+                  {
+                   if ((txno+1)==block.tx.length)
+                   {
+                    logger.debug("Block processing for block "+height+" finished!");
                     is_block_processing=false;
-                  })
+                  }
+                }
+              });
                 }).catch((r) =>
                 {
                   logger.error(r);
-                  is_block_processing=false;
                 })
-              });
-            }
-            else
-            {
-              is_block_processing=false;
-            }
+              }).catch((r) =>
+              {
+                logger.error(r);
+              })
+            });
           }
-        });
-      //
+        }
+      });
       }).catch((r) =>
       {
         logger.error(r);
-        is_block_processing=false;
       })
     }).catch((r) =>
     {
       logger.error(r);
-      is_block_processing=false;
     })
   }, block_indexing_cycle);
  }
-
  function getBlockChainInfo()
  {
+  console.log("getBlockChainInfo");
   let interval;
   interval = setInterval(() => {
     client.command([{ method: "getblockchaininfo" }]).then((r) => 
@@ -288,13 +288,13 @@ async function main()
       }
     }).catch((r) =>
     {
-      //logger.error(r);
+      logger.error(r);
     })
   }, 1000);
 }
-
 function getBlockCount()
 {
+  console.log("getBlockCount");
   let interval;
   interval = setInterval(() => {
     client.command([{ method: "getblockcount"}]).then((r) => 
@@ -306,7 +306,6 @@ function getBlockCount()
    });
   }, 1000);
 }
-
 function getPeerInfo()
 {
   let interval;
